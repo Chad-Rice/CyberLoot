@@ -396,3 +396,9 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Ignore configuration and settings files
+appsettings.json
+appsettings.Development.json
+secrets.json
+.env
