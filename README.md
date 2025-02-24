@@ -1,5 +1,5 @@
 ** IMPORTANT **
-Due to this being a public repo I have not uploaded the appsettings.json and appsettings.Development.json as these have private API keys for the Brevo and PayPal.
+Due to this being a public repo I have not uploaded the appsettings.json and appsettings.Development.json as these have private API keys for Brevo and PayPal.
 
 An online video game retail store, where users can buy, download, and add games they want to a wishlist. 
 Users can also set an alert on the Wishlist for a price range they are interested in, if the game’s price hit that range, they will be sent an email to let them know e.g. the price range is 20 – 30 euros. 
