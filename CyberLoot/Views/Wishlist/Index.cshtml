@@ -1,0 +1,102 @@
+﻿@model List<WishlistItem>
+
+<h2>Your Wishlist</h2>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-warning" role="alert">
+        Your wishlist is empty. Please add games from the <a href="@Url.Action("Index", "Store")" class="alert-link">store page</a>.
+    </div>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Current Price</th>
+                <th>Minimum Desired Price (€)</th>
+                <th>Maximum Desired Price (€)</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Product.Name</td>
+                    <td>€@item.Product.Price</td>
+                    <td>
+                        <input type="number" class="form-control" value="@item.MinPrice" data-product-id="@item.ProductId" data-type="minPrice" />
+                    </td>
+                    <td>
+                        <input type="number" class="form-control" value="@item.MaxPrice" data-product-id="@item.ProductId" data-type="maxPrice" />
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-warning btn-sm mb-2" onclick="addToCart(this, @item.ProductId)">
+                            Add to Cart <i class="bi bi-cart4"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm mb-2" onclick="removeFromWishlist(@item.ProductId)">Remove</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button class="btn btn-primary" onclick="updatePriceRange()">Update Price Range</button>
+}
+
+<script>
+    function removeFromWishlist(productId) {
+        fetch('/Wishlist/Remove', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ productId: productId })
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Error removing from wishlist');
+            }
+        });
+    }
+
+    function updatePriceRange() {
+        const inputs = document.querySelectorAll('input[data-product-id]');
+        const data = [];
+
+        inputs.forEach(input => {
+            const productId = input.getAttribute('data-product-id');
+            const type = input.getAttribute('data-type');
+            const value = parseFloat(input.value);
+
+            let item = data.find(d => d.productId === productId);
+            if (!item) {
+                item = { productId: productId, minPrice: null, maxPrice: null };
+                data.push(item);
+            }
+
+            if (type === 'minPrice') {
+                item.minPrice = value;
+            } else if (type === 'maxPrice') {
+                item.maxPrice = value;
+            }
+        });
+
+        fetch('/Wishlist/UpdatePriceRange', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Error updating price range');
+            }
+        });
+    }
+</script>

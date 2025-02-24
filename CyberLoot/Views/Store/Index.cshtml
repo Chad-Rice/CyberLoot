@@ -1,0 +1,68 @@
+﻿@model StoreSearchModel
+@{
+}
+
+<h2 class="pb-4 text-center">Games</h2>
+
+<form class="row g-3 mb-3 align-items-center">
+    <div class="col-lg-2 col-md-3">
+        <select class="form-select" name="sort" asp-for="Sort" onchange="this.form.submit()">
+            <option value="newest">Order By Newest</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="popular">Popular Games</option>
+        </select>
+    </div>
+    <div class="col-lg-6 col-md-6 d-flex">
+        <input class="form-control me-2" name="search" asp-for="Search" placeholder="Search by Name">
+        <button class="btn btn-outline-success" type="submit">Search</button>
+    </div>
+</form>
+
+<div class="row mb-5 g-3">
+    @foreach (var product in ViewBag.Products)
+    {
+        var genreNames = ((IEnumerable<ProductGenre>)product.ProductGenres).Select(pg => pg.Genre.GenreName);
+        <div class="col-lg-3 col-md-6">
+            <div class="rounded border shadow p-3 text-center h-100">
+                <img src="@product.ImageUrl" class="img-fluid" alt="..."
+                     style="height: 180px; object-fit: contain" />
+                <hr />
+                <h5 class="py-2">@product.Name</h5>
+                @if (ViewBag.OwnedGames != null && ViewBag.OwnedGames.Contains(product.Id))
+                {
+                    <span class="badge bg-danger">This game is already in your Library</span>
+                }
+                <p>
+                    @foreach (var genre in genreNames)
+                    {
+                        <span class="badge bg-secondary">@genre</span>
+                    }
+                </p>
+                <h4 class="mb-3">€@(product.Price)</h4>
+                <a class="btn btn-primary btn-sm mb-2" asp-controller="Store"
+                   asp-action="Details" asp-route-id="@product.Id" role="button">Details</a>
+                <button type="button" class="btn btn-warning btn-sm mb-2" onclick="addToCart(this, @product.Id)">
+                    Add to Cart <i class="bi bi-cart4"></i>
+                </button>
+                <button type="button" class="btn btn-success btn-sm mb-2" onclick="addToWishlist(@product.Id)">
+                    Add to Wishlist <i class="bi bi-heart-fill"></i>
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@*Pagination*@
+<nav>
+    <ul class="pagination">
+        @for (int i = 1; i <= ViewBag.totalPages; i++)
+        {
+            string active = (i == ViewBag.pageIndex) ? "active" : "";
+            <li class="page-item @active">
+                <a class="page-link" asp-route-pageIndex="@i"
+                asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">@i</a>
+            </li>
+        }
+    </ul>
+</nav>

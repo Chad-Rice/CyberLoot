@@ -1,0 +1,153 @@
+﻿@model DownloadViewModel
+
+<div class="container mt-4">
+    <h2 class="text-center">Download Progress</h2>
+
+    @if (Model.CurrentDownload != null)
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h3 class="mb-0">Downloading @Model.CurrentDownload.Name</h3>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="progress" style="height: 30px;">
+                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <p id="status-message" class="mt-2 mb-0">Preparing download...</p>
+                        <p id="download-speed" class="text-muted small mt-1">Speed: 0 MB/s</p>
+                        <p id="time-remaining" class="text-muted small mt-1">Time Remaining: Calculating...</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <img src="@Model.CurrentDownload.ImageUrl" alt="@Model.CurrentDownload.Name" class="img-fluid rounded mb-3" style="max-height: 150px;">
+                        <button id="start-download" class="btn btn-primary w-100">Start Download</button>
+                        <button id="pause-download" class="btn btn-warning w-100 mt-2" style="display: none;">Pause Download</button>
+                        <button id="resume-download" class="btn btn-primary w-100 mt-2" style="display: none;">Resume Download</button>
+                        <button id="cancel-download" class="btn btn-danger w-100 mt-2" style="display: none;">Cancel Download</button>
+                        <a id="download-link" href="@Url.Action("CompleteDownload", new { id = Model.CurrentDownload.Id })" class="btn btn-success w-100 mt-2" style="display: none;">Download File</a>
+                        <a href="@Url.Action("RemoveFromDownloadQueue", new { id = Model.CurrentDownload.Id })" class="btn btn-danger w-100 mt-2">Remove</a>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <p class="text-muted">Total Size: @Math.Round(@Model.CurrentDownload.GameSize / 1024.0, 0) GB</p>
+                    <p class="text-muted">Completed: <span id="completed-size">0</span> MB</p>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <p>No current downloads. Start a download from your queue!</p>
+    }
+
+    <h2>Queued Downloads</h2>
+
+    @if (!Model.Queue.Any())
+    {
+        <p>No games in the download queue. Add some games from your library!</p>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var game in Model.Queue)
+            {
+                <div class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            <img src="@game.ImageUrl" alt="@game.Name" class="img-fluid rounded">
+                        </div>
+                        <div class="col-md-8">
+                            <h5>@game.Name</h5>
+                            <p class="text-muted">@game.ReleaseDate.ToShortDateString()</p>
+                        </div>
+                        <div class="col-md-2 text-right">
+                            <a href="@Url.Action("Download", "Library", new { id = game.Id })" class="btn btn-primary">Start Download</a>
+                            <a href="@Url.Action("RemoveFromDownloadQueue", "Library", new { id = game.Id })" class="btn btn-danger ml-2">Remove</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        let progress = 0;
+        let downloadSpeedValue = 5; // MB/s
+        let totalSize = @Model.CurrentDownload?.GameSize ?? 0; // Total size in MB
+        let completedSize = 0;
+        let interval;
+
+        function formatTime(seconds) {
+            if (seconds >= 3600) {
+                let hours = Math.floor(seconds / 3600);
+                let minutes = Math.floor((seconds % 3600) / 60);
+                return hours + "h " + minutes + "m";
+            } else if (seconds >= 60) {
+                let minutes = Math.floor(seconds / 60);
+                return minutes + "m " + (seconds % 60) + "s";
+            } else {
+                return seconds + "s";
+            }
+        }
+
+        document.getElementById("start-download").addEventListener("click", function () {
+            startDownload();
+        });
+
+        document.getElementById("pause-download").addEventListener("click", function () {
+            clearInterval(interval);
+            document.getElementById("pause-download").style.display = "none";
+            document.getElementById("resume-download").style.display = "inline-block";
+            document.getElementById("status-message").textContent = "Download paused";
+        });
+
+        document.getElementById("resume-download").addEventListener("click", function () {
+            document.getElementById("resume-download").style.display = "none";
+            document.getElementById("pause-download").style.display = "inline-block";
+            document.getElementById("status-message").textContent = "Resuming download...";
+            startDownload();
+        });
+
+        document.getElementById("cancel-download").addEventListener("click", function () {
+            clearInterval(interval);
+            document.getElementById("progress-bar").style.width = "0%";
+            document.getElementById("status-message").textContent = "Download canceled";
+            document.getElementById("download-speed").textContent = "Speed: 0 MB/s";
+            document.getElementById("time-remaining").textContent = "Time Remaining: N/A";
+            document.getElementById("completed-size").textContent = "0";
+            document.getElementById("start-download").style.display = "inline-block";
+            document.getElementById("pause-download").style.display = "none";
+            document.getElementById("resume-download").style.display = "none";
+            document.getElementById("cancel-download").style.display = "none";
+        });
+
+        function startDownload() {
+            document.getElementById("start-download").style.display = "none";
+            document.getElementById("pause-download").style.display = "inline-block";
+            document.getElementById("cancel-download").style.display = "inline-block";
+
+            interval = setInterval(function () {
+                progress += downloadSpeedValue / totalSize * 100;
+                completedSize += downloadSpeedValue;
+                document.getElementById("progress-bar").style.width = progress + "%";
+                document.getElementById("progress-bar").setAttribute("aria-valuenow", progress);
+                document.getElementById("status-message").textContent = "Downloading... " + Math.floor(progress) + "%";
+                document.getElementById("download-speed").textContent = "Speed: " + downloadSpeedValue + " MB/s";
+                document.getElementById("time-remaining").textContent = "Time Remaining: " + formatTime(Math.floor((totalSize - completedSize) / downloadSpeedValue));
+                document.getElementById("completed-size").textContent = completedSize;
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    document.getElementById("status-message").textContent = "Download complete!";
+                    document.getElementById("time-remaining").textContent = "";
+                    document.getElementById("download-link").style.display = "inline-block";
+                    document.getElementById("pause-download").style.display = "none";
+                    document.getElementById("cancel-download").style.display = "none";
+                }
+            }, 1000);
+        }
+    </script>
+}

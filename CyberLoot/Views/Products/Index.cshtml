@@ -1,0 +1,117 @@
+﻿@using Microsoft.AspNetCore.Html
+@model List<Product>
+@{
+    int pageIndex = (int)ViewData["PageIndex"]!;        // Current Page
+    int totalPages = (int)ViewData["TotalPages"]!;
+
+    string search = ViewData["Search"]?.ToString() ?? "";
+
+    string column = ViewData["Column"]?.ToString() ?? "Id";
+    string orderBy = ViewData["OrderBy"]?.ToString() ?? "desc";
+
+    HtmlString getArrow(string tableColumn)
+    {
+        if (tableColumn != column) return new HtmlString("");
+
+        if (orderBy == "desc")
+        {
+            return new HtmlString("<i class='bi bi-arrow-down'></i>");
+        }
+
+        return new HtmlString("<i class='bi bi-arrow-up'></i>");
+    }
+}
+
+<h2 class="text-center mb-5">List of Products</h2>
+
+<div class="row mb-5">
+    <div class="col">
+        <a class="btn btn-primary" asp-controller="Products" asp-action="Create">New Product</a>
+    </div>
+    @*Functioning Search bar. May tweak a little bit in the future, Add auto complete, and make it less percise*@
+    <div class="col text-right">
+        <form class="form-inline" method="get" asp-controller="Products" asp-action="Index">
+            <div class="input-group">
+                <input class="form-control" type="search" placeholder="Search by name, developer, publisher, or genre" aria-label="Search" name="search" value="@search">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function sortTable(column) {
+        let orderBy = "desc"
+        let currentColumn = "@column";
+        let currentOrder = "@orderBy";
+        if (column === currentColumn){
+            if (currentOrder == "asc") orderBy = "desc";
+            else orderBy = "asc";
+        }
+        window.location.href = "?seach=@(search)&column=" + column + "&orderBy=" + orderBy
+    }
+</script>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th style="cursor: pointer" onclick="sortTable('Name')">Name @getArrow("Name")</th>
+            <th>Description</th>
+            <th style="cursor: pointer" onclick="sortTable('Publisher')">Publisher @getArrow("Publisher")</th>
+            <th style="cursor: pointer" onclick="sortTable('Developer')">Developer @getArrow("Developer")</th>
+            <th style="cursor: pointer" onclick="sortTable('Price')">Price @getArrow("Price")</th>
+            <th style="cursor: pointer" onclick="sortTable('GameSize')">Size @getArrow("GameSize")</th>
+            <th>Image</th>
+            <th style="cursor: pointer" onclick="sortTable('ReleaseDate')">Released @getArrow("ReleaseDate")</th>
+            <th style="cursor: pointer" onclick="sortTable('Genre')">Genres @getArrow("Genre")</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var product in Model)
+        {
+            <tr>
+                <!-- I am not displaying the ID column-->
+                <td>@product.Name</td>
+                <td>@product.Description</td>
+                <td>@product.Publisher</td>
+                <td>@product.Developer</td>
+                <td>€@(product.Price)</td>
+                <td>@Math.Round(product.GameSize / 1024.0, 0)GB</td>
+                <td><img src="@product.ImageUrl" width="100" /></td>
+                <td>@product.ReleaseDate.ToString("dd/MM/yyyy")</td>
+                <td>
+                    @foreach (var genre in product.ProductGenres.Select(pg => pg.Genre.GenreName))
+                    {
+                        <span class="badge bg-secondary">@genre</span>
+                    }
+                </td>
+                <td style="white-space:nowrap">
+                    <a class="btn btn-primary btn-sm" asp-controller="Products" asp-action="Edit"
+                       asp-route-id="@product.Id">Edit</a>
+                    <a class="btn btn-danger btn-sm" asp-controller="Products" asp-action="Delete"
+                       asp-route-id="@product.Id" onclick="return confirm('Are you sure ?')">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@*Pagination*@
+<nav>
+    <ul class="pagination">
+        @for (int i = 1; i <= totalPages; i++)
+        {
+            string active = (i == pageIndex) ? "active" : "";
+            <li class="page-item @active">
+                <a class="page-link" asp-route-pageIndex="@i" 
+                                     asp-route-search="@search" 
+                                     asp-route-column="@column" 
+                                     asp-route-orderBy="@orderBy">@i</a>
+            </li>
+        }
+    </ul>
+</nav>

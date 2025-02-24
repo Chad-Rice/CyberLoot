@@ -1,0 +1,70 @@
+﻿@model Product
+@{
+}
+
+<div class="row">
+    <div class="col-md-4 text-center">
+        <img src="@Model.ImageUrl" class="img-fluid mb-3" alt="..." width="250" />
+    </div>
+    <div class="col-md-8">
+        <h3 class="mb-3">@Model.Name</h3>
+        @if (ViewBag.UserOwnsProduct)
+        {
+            <span class="badge bg-danger">This game is already in your Library</span>
+        }
+        <h3 class="mb-3">€@(Model.Price)</h3>
+        <button type="button" class="btn btn-warning btn-sm" onclick="addToCart(this, @Model.Id)">
+            Add to Cart <i class="bi bi-cart4"></i>
+        </button>
+        <button type="button" class="btn btn-success btn-sm" onclick="addToWishlist(@Model.Id)">
+            Add to Wishlist <i class="bi bi-heart-fill"></i>
+        </button>
+
+
+        <hr />
+
+        <div class="row mb-3">
+            <div class="col-sm-3 fw-bold">
+                Publisher:
+            </div>
+            <div class="col-sm-9">
+                @Model.Publisher
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-sm-3 fw-bold">
+                Developer:
+            </div>
+            <div class="col-sm-9">
+                @Model.Developer
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-sm-3 fw-bold">
+                Game Storage:
+            </div>
+            <div class="col-sm-9">
+                @Math.Round(@Model.GameSize / 1024.0, 0) GB
+            </div>
+        </div>
+
+        
+
+        <div class="row mb-3">
+            <div class="col-sm-3 fw-bold">
+                Genres:
+            </div>
+            <div class="col-sm-9">
+                @foreach (var genre in Model.ProductGenres.Select(pg => pg.Genre.GenreName))
+                {
+                    <span class="badge bg-secondary">@genre</span>
+                }
+            </div>
+        </div>
+
+        <div class="fw-bold">Description</div>
+        <div style="white-space: pre-line">@Model.Description</div>
+    </div>
+</div>

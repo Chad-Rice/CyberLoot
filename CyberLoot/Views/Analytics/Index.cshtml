@@ -1,0 +1,80 @@
+﻿@model IEnumerable<CyberLoot.Models.ProductSalesViewModel>
+
+<h2 class="text-center">Game Sales Analytics</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Game</th>
+            <th>Total Copies Sold</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var game in Model)
+        {
+            <tr>
+                <td>@game.ProductName</td>
+                <td>@game.PurchaseCount</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Page Visits Section -->
+<h2 class="text-center">Page Visits Analytics</h2>
+<div class="row">
+    <div class="col-md-6">
+        <h3 class="text-center">Page Visits Table</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Page</th>
+                    <th>Visit Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in ViewBag.PageVisitData)
+                {
+                    <tr>
+                        <td>@item.Page</td>
+                        <td>@item.Count</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-6">
+        <h3 class="text-center">Page Visits Chart</h3>
+        <canvas id="analyticsChart" width="400" height="200"></canvas>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Cast ViewBag.PageVisitData to a strongly-typed list
+        var pageVisitData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject((List<CyberLoot.Models.AnalyticsViewModel>)ViewBag.PageVisitData));
+
+        var ctx = document.getElementById('analyticsChart').getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: pageVisitData.map(d => d.Page),
+                datasets: [{
+                    label: 'Page Visits',
+                    data: pageVisitData.map(d => d.Count),
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+}

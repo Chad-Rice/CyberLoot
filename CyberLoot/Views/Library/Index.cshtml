@@ -1,0 +1,38 @@
+﻿@model List<CyberLoot.Models.Product>
+
+<div class="container mt-4">
+    <h2 class="text-center">Your Game Library</h2>
+
+    @if (!Model.Any())
+    {
+        <p>You don't own any games yet. Start shopping!</p>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var game in Model)
+            {
+                <div class="col-md-3">
+                    <div class="card mb-4 shadow-sm">
+                        <img src="@game.ImageUrl" class="card-img-top" alt="@game.Name">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">@game.Name</h5>
+                            <p class="card-text small text-muted">@game.ReleaseDate.ToShortDateString()</p>
+                            <div class="btn-group" role="group">
+                                <a href="@Url.Action("AddToDownload", "Library", new { id = game.Id })" class="btn btn-primary">
+                                    <i class="bi bi-download"></i> Add to Download Queue
+                                </a>
+                                <a href="@Url.Action("Details", "Store", new { id = game.Id })" class="btn btn-outline-secondary">
+                                    <i class="bi bi-info-circle"></i> Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    <div class="mt-4">
+        <a href="@Url.Action("Downloads", "Library")" class="btn btn-success">Go to Downloads</a>
+    </div>
+</div>
